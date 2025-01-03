@@ -7,9 +7,9 @@
 #include "graphics_sdl.h"
 
 int main() {
-	graphics(800, 600);
 	const int nx = 800;
 	const int ny = 600;
+	graphics(nx,ny);
 	int castle[nx][ny];
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
