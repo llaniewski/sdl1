@@ -28,9 +28,23 @@ struct sdl_wrapper_t {
 			}
 		}
 	};
+
 	char_tab kbd_tab;
+    bool initialised;
+
+    sdl_wrapper_t() {
+        initialised = false;
+		window = NULL;
+		renderer = NULL;
+    }
+    ~sdl_wrapper_t() {
+        if (initialised) {
+            SDL_Quit();
+        }
+    };
 
 	void graphics(int sx, int sy) {
+        initialised = true;
 		window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
 		renderer = SDL_CreateRenderer(window, -1, 0);
 	}
@@ -53,11 +67,12 @@ struct sdl_wrapper_t {
 		}
 
 		SDL_Event event;
+        int ret = 1;
 		while( SDL_PollEvent(&event) )
 		{
 			if (event.type == SDL_QUIT) {
-				SDL_Quit();
-				exit(-1);
+                exit(0);
+				ret = 0;
 			}
 			if (event.type == SDL_KEYDOWN) {
 				int key = event.key.keysym.sym;
@@ -68,7 +83,7 @@ struct sdl_wrapper_t {
 				kbd_tab.up(key);
 			}
 		}
-		return 1;
+		return ret;
 	}
 
 	void clear() {
