@@ -8,35 +8,22 @@ struct sdl_wrapper_t {
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
-	struct char_tab {
-		bool buf[256];
-		bool& el(char ch) {
-			return buf[(unsigned char)ch];
-		}
-		void down(char ch) {
-			el(ch) = true;
-		}
-		void up(char ch) {
-			el(ch) = false;
-		}
-		int is_pressed(char ch) {
-			return el(ch);
-		}
-		char_tab() {
-			for (int i = 0; i < 256; i++) {
-				buf[i] = false;
-			}
-		}
-	};
+	bool kbd_tab[256];
+	bool& is_pressed(char ch) {
+		return kbd_tab[(unsigned char)ch];
+	}
 
-	char_tab kbd_tab;
     bool initialised;
 
     sdl_wrapper_t() {
         initialised = false;
 		window = NULL;
 		renderer = NULL;
+		for (int i = 0; i < 256; i++) {
+			kbd_tab[i] = false;
+		}
     }
+
     ~sdl_wrapper_t() {
         if (initialised) {
             SDL_Quit();
@@ -76,11 +63,11 @@ struct sdl_wrapper_t {
 			}
 			if (event.type == SDL_KEYDOWN) {
 				int key = event.key.keysym.sym;
-				kbd_tab.down(key);
+				is_pressed(key) = true;
 			}
 			if (event.type == SDL_KEYUP) {
 				int key = event.key.keysym.sym;
-				kbd_tab.up(key);
+				is_pressed(key) = false;
 			}
 		}
 		return ret;
@@ -147,9 +134,15 @@ void setcolor(double c)
 	{ setrgbcolor(0,cos(c*pi/2)*255,255); return; }
 }
 
+void setgray(double c)
+{
+	if (c < 0) c = 0;
+	if (c > 1) c = 1;
+	setrgbcolor(c*255,c*255,c*255);
+}
 
 int is_pressed(char ch) {
-	return sdl_wrapper.kbd_tab.is_pressed(ch);
+	return sdl_wrapper.is_pressed(ch);
 }
 
 void graphics(int sx, int sy) { return sdl_wrapper.graphics(sx,sy); }
