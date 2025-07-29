@@ -10,7 +10,7 @@ int main() {
 	const int nx = 800;
 	const int ny = 600;
 	graphics(nx,ny);
-	int castle[nx][ny];
+	char castle[nx][ny];
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
 			if (j > 500) {
@@ -61,7 +61,7 @@ int main() {
 		double adx = cos(aa);
 		double ady = sin(aa);
 
-		if (pressed_space()) {
+		if (is_pressed(SPACEBAR)) {
 			if (phase == 0) {
 				phase = 1;
 				t = 0;
@@ -167,7 +167,7 @@ int main() {
 			for (int j = 0; j < ny; j++) {
                 
 				if (castle[i][j]) {
-                    setcolor(castle[i][j]*0.2);
+                    setcolor(rainbow(castle[i][j]*0.2));
                     point(i, j);
                 }
 			}
