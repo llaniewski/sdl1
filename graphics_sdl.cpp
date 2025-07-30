@@ -3,13 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+
 const double pi = 4*atan(1.0);
 const double twopi = 2*pi;
 
-window DefaultWindow;
-std::vector<window*> active;
-
-bool window::kbd_tab[256];
+window::sdl_global window::global;
 
 window::window() {
     initialised = false;
@@ -17,9 +15,6 @@ window::window() {
 	is_slow = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
-	for (int i = 0; i < 256; i++) {
-		kbd_tab[i] = false;
-	}
 }
 
 window::~window() {
@@ -28,16 +23,29 @@ window::~window() {
     }
 };
 
-void window::graphics(int sx, int sy) {
+
+window::sdl_global::sdl_global() {
+	for (int i = 0; i < 256; i++) {
+		kbd_tab[i] = false;
+	}
+}
+
+window::sdl_global::~sdl_global() {
+
+}
+
+
+void window::init(int sx, int sy) {
     sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
 	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 	initialised = true;
-	active.push_back(this);
+	global.windows.push_back(this);
+	global.active = this;
 }
 
-int window::animate(double fps) {
-	for( window* w : active) {
+int window::sdl_global::animate(double fps) {
+	for( window* w : global.windows) {
 		SDL_RenderPresent( w->sdl_renderer );
 	}
 	const double ticks_per_second = 1000.;
@@ -156,7 +164,7 @@ void window::slow() {
 }
 
 
-void window::wait() {
+void window::sdl_global::wait() {
 	while (animate(15)) {};
 }
 

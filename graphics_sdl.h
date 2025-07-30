@@ -6,15 +6,31 @@
 //         Warsaw University of Technology
 //
 
+#include <vector>
+
 class SDL_Window;
 class SDL_Renderer;
 
+
 class window {
 private:
+	struct sdl_global {
+		bool kbd_tab[256];
+		window* active;
+		std::vector<window*> windows;
+	public:
+		sdl_global();
+		~sdl_global();
+		inline bool& is_pressed(char ch) {
+			return kbd_tab[(unsigned char)ch];
+		}
+		int animate(double fps);
+		void wait();
+	};
+
 	SDL_Window* sdl_window;
 	SDL_Renderer* sdl_renderer;
-	
-	static bool kbd_tab[256];
+
 	bool is_slow;
 	bool to_set;
 	double to_x, to_y;
@@ -23,12 +39,10 @@ private:
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
 public:
-	static inline bool& is_pressed(char ch) {
-		return kbd_tab[(unsigned char)ch];
-	}
 	window();
 	~window();
-	void graphics(int sx, int sy);
+	static sdl_global global;
+	void init(int sx, int sy);
 	void clear();
 	void line(double x1, double y1, double x2, double y2);
 	void circle(double x0, double y0, int r);
@@ -36,11 +50,7 @@ public:
 	void setcolor(unsigned int c);
 	void point(double x, double y);
 	void slow();
-	static int animate(double fps);
-	static void wait();
 };
-
-
 
 unsigned int rainbow(double c);
 unsigned int setgray(double c);
@@ -49,16 +59,18 @@ const unsigned int GREEN = 0x00FF00;
 const unsigned int WHITE = 0xFFFFFF;
 const char SPACEBAR = 32;
 
-extern window DefaultWindow;
-
-inline int is_pressed(char ch) { return DefaultWindow.is_pressed(ch); }
-inline void graphics(int sx, int sy) { return DefaultWindow.graphics(sx, sy); }
-inline void clear() { return DefaultWindow.clear(); }
-inline void line(double x1, double y1, double x2, double y2) { return DefaultWindow.line(x1, y1, x2, y2); }
-inline void circle(double x, double y, int r) { return DefaultWindow.circle(x, y, r); }
-inline void point(double x, double y) { return DefaultWindow.point(x, y); }
-inline void setcolor(int r, int g, int b) {return DefaultWindow.setcolor(r, g, b); }
-inline void setcolor(unsigned int c) { return DefaultWindow.setcolor(c); }
-inline void slow() { return DefaultWindow.slow(); }
-inline int animate(double fps) { return DefaultWindow.animate(fps); }
-inline void wait() { return DefaultWindow.wait(); }
+inline window& active_window() { return *window::global.active; }
+inline int is_pressed(char ch) { return window::global.is_pressed(ch); }
+inline void graphics(int sx, int sy) {
+	window* win = new window;
+	win->init(sx,sy);
+}
+inline void clear() { return active_window().clear(); }
+inline void line(double x1, double y1, double x2, double y2) { return active_window().line(x1, y1, x2, y2); }
+inline void circle(double x, double y, int r) { return active_window().circle(x, y, r); }
+inline void point(double x, double y) { return active_window().point(x, y); }
+inline void setcolor(int r, int g, int b) {return active_window().setcolor(r, g, b); }
+inline void setcolor(unsigned int c) { return active_window().setcolor(c); }
+inline void slow() { return active_window().slow(); }
+inline int animate(double fps) { return window::global.animate(fps); }
+inline void wait() { return window::global.wait(); }
