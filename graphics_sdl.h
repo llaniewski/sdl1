@@ -16,8 +16,12 @@ private:
 	SDL_Renderer* sdl_renderer;
 
 	bool kbd_tab[256];
-
+	bool to_set;
+	double to_x, to_y;
 	bool initialised;
+	void _resetto();
+	void _lineto(double x, double y);
+	void _line(double x1, double y1, double x2, double y2);
 public:
 	inline bool& is_pressed(char ch) {
 		return kbd_tab[(unsigned char)ch];

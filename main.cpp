@@ -7,11 +7,13 @@
 #include "graphics_sdl.h"
 
 int main() {
-	graphics(300,300);
+	graphics(400,400);
 	clear();
-	line(0,0,300,300);
-	line(0,300,300,0);
-	circle(150,150,150);
+	line(50,50,350,350);
+	line(50,350,350,50);
+	circle(200,200,50);
+	circle(200,200,100);
+	circle(200,200,150);
 	while(animate(15)) {};
 	return 0;
 }

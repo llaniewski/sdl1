@@ -9,6 +9,7 @@ window DefaultWindow;
 
 window::window() {
     initialised = false;
+	to_set = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
 	for (int i = 0; i < 256; i++) {
@@ -26,6 +27,7 @@ void window::graphics(int sx, int sy) {
     initialised = true;
 	sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
+	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 }
 
 int window::animate(double fps) {
@@ -66,39 +68,73 @@ int window::animate(double fps) {
 }
 
 void window::clear() {
+	Uint8 r,g,b,a;
+	SDL_GetRenderDrawColor(sdl_renderer, &r, &g, &b, &a);
 	SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
 	SDL_RenderClear(sdl_renderer);
+	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
 }
 
 double flow(double x) {
 	if (x < 0) x = 0;
 	if (x > 1) x = 1;
 	return x*x*(3-2*x);
+	//return x;
 }
+
+
+void window::_resetto() {
+	to_set = false;
+}
+
+void window::_line(double x1, double y1, double x2, double y2) {
+	SDL_RenderDrawLine(sdl_renderer, x1, y1, x2, y2);
+}
+
+
+void window::_lineto(double x, double y) {
+	if (to_set) {
+		_line(to_x, to_y, x, y);
+	}
+	to_set = true;
+	to_x = x;
+	to_y = y;
+}
+
 
 void window::line(double x1, double y1, double x2, double y2) {
-	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 	double d = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-	double m = 30.0/d;
-	for (double t = 0; t < 1.0; t += m) {
+	double m = 80.0/d;
+	double t = 0;
+	_resetto();
+	for (double t = 0; t < 1; t += m) {
 		double t1 = flow(t);
-		double t2 = flow(t + m);
-		SDL_RenderDrawLine(sdl_renderer, x1*(1-t1)+x2*t1, y1*(1-t1)+y2*t1, x1*(1-t2)+x2*t2, y1*(1-t2)+y2*t2);
+		_lineto(x1*(1-t1)+x2*t1, y1*(1-t1)+y2*t1);
 		animate(15);
 	}
-//	SDL_RenderDrawLine(sdl_renderer, x1, y1, x2, y2);
+	_lineto(x2, y2);
 }
 
+
 void window::circle(double x0, double y0, int r) {
-	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 	double d = twopi*r;
-	double m = 30.0/d;
-	for (double t = 0; t < 1.0; t += m) {
-		double t1 = twopi*flow(t);
-		double t2 = twopi*flow(t + m);
-		SDL_RenderDrawLine(sdl_renderer, x0+cos(t1)*r,y0+sin(t1)*r, x0+cos(t2)*r,y0+sin(t2)*r);
+	double m = 80.0/d;
+	double mi = 80.0/d;
+	double t2 = 0;
+	_resetto();
+	for (double t = 0; t < 1; t += m) {
+		double t1 = twopi * flow(t);
+		while (t2 <= t1) {
+			_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
+			t2 += mi;
+		}
 		animate(15);
 	}
+	while (t2 < twopi) {
+		_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
+		t2 += mi;
+	}
+	_lineto(x0+r,y0);
 }
 
 void window::setcolor(int r, int g, int b)

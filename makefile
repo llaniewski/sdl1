@@ -7,6 +7,6 @@ main.o: main.cpp graphics_sdl.h
 graphics_sdl.o: graphics_sdl.cpp graphics_sdl.h
 
 %: %.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
