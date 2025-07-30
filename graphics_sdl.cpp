@@ -2,14 +2,19 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 const double pi = 4*atan(1.0);
 const double twopi = 2*pi;
 
 window DefaultWindow;
+std::vector<window*> active;
+
+bool window::kbd_tab[256];
 
 window::window() {
     initialised = false;
 	to_set = false;
+	is_slow = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
 	for (int i = 0; i < 256; i++) {
@@ -24,14 +29,17 @@ window::~window() {
 };
 
 void window::graphics(int sx, int sy) {
-    initialised = true;
-	sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
+    sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
 	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
+	initialised = true;
+	active.push_back(this);
 }
 
 int window::animate(double fps) {
-	SDL_RenderPresent( sdl_renderer );
+	for( window* w : active) {
+		SDL_RenderPresent( w->sdl_renderer );
+	}
 	const double ticks_per_second = 1000.;
 	double targettime = ticks_per_second/fabs(fps);
 	const double maxdelay = 60 * ticks_per_second;
@@ -103,32 +111,38 @@ void window::_lineto(double x, double y) {
 
 
 void window::line(double x1, double y1, double x2, double y2) {
-	double d = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-	double m = 80.0/d;
-	double t = 0;
-	_resetto();
-	for (double t = 0; t < 1; t += m) {
-		double t1 = flow(t);
-		_lineto(x1*(1-t1)+x2*t1, y1*(1-t1)+y2*t1);
-		animate(15);
+	if (is_slow) {
+		double d = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+		double m = 80.0/d;
+		double t = 0;
+		_resetto();
+		for (double t = 0; t < 1; t += m) {
+			double t1 = flow(t);
+			_lineto(x1*(1-t1)+x2*t1, y1*(1-t1)+y2*t1);
+			animate(15);
+		}
+		_lineto(x2, y2);
+	} else {
+		_line(x1,y1,x2,y2);
 	}
-	_lineto(x2, y2);
 }
 
 
 void window::circle(double x0, double y0, int r) {
 	double d = twopi*r;
-	double m = 80.0/d;
 	double mi = 80.0/d;
 	double t2 = 0;
 	_resetto();
-	for (double t = 0; t < 1; t += m) {
-		double t1 = twopi * flow(t);
-		while (t2 <= t1) {
-			_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
-			t2 += mi;
+	if (is_slow) {
+		double m = 80.0/d;
+		for (double t = 0; t < 1; t += m) {
+			double t1 = twopi * flow(t);
+			while (t2 <= t1) {
+				_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
+				t2 += mi;
+			}
+			animate(15);
 		}
-		animate(15);
 	}
 	while (t2 < twopi) {
 		_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
@@ -136,6 +150,17 @@ void window::circle(double x0, double y0, int r) {
 	}
 	_lineto(x0+r,y0);
 }
+
+void window::slow() {
+	is_slow = true;
+}
+
+
+void window::wait() {
+	while (animate(15)) {};
+}
+
+
 
 void window::setcolor(int r, int g, int b)
 {

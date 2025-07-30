@@ -8,13 +8,14 @@
 
 int main() {
 	graphics(400,400);
+	slow();
 	clear();
 	line(50,50,350,350);
 	line(50,350,350,50);
 	circle(200,200,50);
 	circle(200,200,100);
 	circle(200,200,150);
-	while(animate(15)) {};
+	wait();
 	return 0;
 }
 
