@@ -11,14 +11,12 @@
 
 class SDL_Window;
 class SDL_Renderer;
-class TTF_Font;
 
 class window {
 private:
 	struct sdl_global {
 		bool kbd_tab[256];
 		window* active;
-		//TTF_Font* Sans;
 		std::vector<window*> windows;
 	public:
 		sdl_global();
@@ -40,7 +38,7 @@ private:
 	void _resetto();
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
-	void _text(double x, double y, const std::string& font, int size, const std::string& text);
+	void _text(double x, double y, const std::string& font, int size, const std::string& text, double adjx=0.5, double adjy=0.5);
 public:
 	window();
 	~window();

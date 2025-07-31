@@ -93,7 +93,34 @@ bool operator<(const SDL_Color& A, const SDL_Color& B) {
 	return false;
 }
 
-SDL_Texture* cached_RenderedText(const std::string& font, int size, const SDL_Color& color, SDL_Renderer* const renderer, const std::string& text) {
+class sprite {
+public:
+	SDL_Surface* surface;
+	SDL_Texture* texture;
+	int nx, ny;
+	int w, h;
+	sprite(SDL_Surface* surface_, SDL_Texture* texture_, int nx_=1, int ny_=1) :
+		surface(surface_), texture(texture_), nx(nx_), ny(ny_) {
+		w = surface->w;
+		h = surface->h;
+	}
+	inline SDL_Rect getRect(int ix=0, int iy=0) {
+		int ix1 = ix % nx;
+		int iy1 = (iy + (ix-ix1)/nx) % ny;
+		int x1 = w * ix1 / nx;
+		int y1 = h * iy1 / ny;
+		int x2 = w * (ix1+1) / nx;
+		int y2 = h * (iy1+1) / ny;
+		SDL_Rect rect;
+		rect.x = x1;
+		rect.y = y1;
+		rect.w = x2 - x1;
+		rect.h = y2 - y1;
+		return rect;
+	}
+};
+
+sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& color, SDL_Renderer* const renderer, const std::string& text) {
 	typedef std::tuple< std::string, int, SDL_Color, SDL_Renderer*, std::string > input;
 	struct output {
 		SDL_Surface* textSurface;
@@ -113,8 +140,7 @@ SDL_Texture* cached_RenderedText(const std::string& font, int size, const SDL_Co
 	};
 	static priority_cache<input, output> cache;
 	output& out = cache.get(input(font,size,color,renderer,text));
-	//return out.textTexture;
-	return NULL;
+	return sprite(out.textSurface, out.textTexture);
 }
 
 
@@ -123,20 +149,6 @@ window::sdl_global::sdl_global() {
 	for (int i = 0; i < 256; i++) {
 		kbd_tab[i] = false;
 	}
-// 	Sans = cached_Font("OpenSans-Medium.ttf", 24);
-// 	if (Sans == NULL) {
-// 		fprintf(stderr, "Something went seriously wrong\n");
-// 	}
-// // // this is the color in rgb format,
-// // // maxing out all would give you the color white,
-// // // and it will be your text's color
-// 	SDL_Color White = {255, 255, 255};
-
-// // // as TTF_RenderText_Solid could only be used on
-// // // SDL_Surface then you have to create the surface first
-// 	SDL_Surface* surfaceMessage =
-// 		TTF_RenderText_Solid(Sans, "put your text here", White); 
-
 }
 
 window::sdl_global::~sdl_global() {
@@ -195,25 +207,24 @@ int window::sdl_global::animate(double fps) {
 void window::clear() {
 	Uint8 r,g,b,a;
 	SDL_GetRenderDrawColor(sdl_renderer, &r, &g, &b, &a);
-	SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(sdl_renderer, 128, 0, 0, 255);
 	SDL_RenderClear(sdl_renderer);
 	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
 }
 
-
-
-
-void window::_text(double x, double y, const std::string& font, int size, const std::string& text) {
-	SDL_Color color = {255,255,255};
-	SDL_Texture* tex = cached_RenderedText(font, size, color, sdl_renderer, text);
-	SDL_Rect rect;
-	SDL_RenderCopy(sdl_renderer, tex, NULL, &rect);
+void window::_text(double x, double y, const std::string& font, int size, const std::string& text, double adjx, double adjy) {
+	SDL_Color color = {255,255,255,255};
+	sprite ren = cached_RenderedText(font, size, color, sdl_renderer, text);
+	SDL_Rect src_rect = ren.getRect();
+	SDL_Rect dst_rect = src_rect;
+	dst_rect.x = x - src_rect.w*adjx;
+	dst_rect.y = y - src_rect.h*adjy;
+	SDL_RenderCopy(sdl_renderer, ren.texture, &src_rect, &dst_rect);
 }
 
 void window::text(double x, double y, int size, const std::string& text) {
 	return _text(x,y,"OpenSans-Medium.ttf", size, text);
 }
-
 
 double flow(double x) {
 	if (x < 0) x = 0;
