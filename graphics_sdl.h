@@ -11,6 +11,17 @@
 
 class SDL_Window;
 class SDL_Renderer;
+class SDL_Surface;
+class SDL_Texture;
+
+class sprite {
+public:
+	SDL_Surface* surface;
+	SDL_Texture* texture;
+	int nx, ny;
+	int w, h;
+	sprite(SDL_Surface* surface_, SDL_Texture* texture_, int nx_=1, int ny_=1);
+};
 
 class window {
 private:
@@ -35,10 +46,12 @@ private:
 	bool to_set;
 	double to_x, to_y;
 	bool initialised;
+	std::string font_name;
+	int font_size;
+	double adjx, adjy;
 	void _resetto();
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
-	void _text(double x, double y, const std::string& font, int size, const std::string& text, double adjx=0.5, double adjy=0.5);
 public:
 	window();
 	~window();
@@ -51,7 +64,11 @@ public:
 	void setcolor(unsigned int c);
 	void point(double x, double y);
 	void slow();
-	void text(double x, double y, int size, const std::string& text);
+	void stamp(double x, double y, const sprite& sp);
+	void text(double x, double y, const std::string& text);
+	inline void set_font(const std::string& font_name_) { font_name = font_name_; };
+	inline void set_font_size(int font_size_) { font_size = font_size_; };
+	void set_adj(double adjx_, double adjy_) { adjx = adjx_; adjy = adjy_; };
 };
 
 unsigned int rainbow(double c);
@@ -76,4 +93,4 @@ inline void setcolor(unsigned int c) { return active_window().setcolor(c); }
 inline void slow() { return active_window().slow(); }
 inline int animate(double fps) { return window::global.animate(fps); }
 inline void wait() { return window::global.wait(); }
-inline void text(double x, double y, int size, const std::string& text) { return active_window().text(x, y, size, text); };
+inline void text(double x, double y, const std::string& text) { return active_window().text(x, y, text); };

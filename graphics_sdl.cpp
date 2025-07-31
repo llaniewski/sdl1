@@ -53,6 +53,10 @@ window::window() {
 	is_slow = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
+	font_name = "OpenSans-Medium.ttf";
+	font_size = 20;
+	adjx = 0.5;
+	adjy = 0.5;
 }
 
 window::~window() {
@@ -93,32 +97,26 @@ bool operator<(const SDL_Color& A, const SDL_Color& B) {
 	return false;
 }
 
-class sprite {
-public:
-	SDL_Surface* surface;
-	SDL_Texture* texture;
-	int nx, ny;
-	int w, h;
-	sprite(SDL_Surface* surface_, SDL_Texture* texture_, int nx_=1, int ny_=1) :
-		surface(surface_), texture(texture_), nx(nx_), ny(ny_) {
-		w = surface->w;
-		h = surface->h;
-	}
-	inline SDL_Rect getRect(int ix=0, int iy=0) {
-		int ix1 = ix % nx;
-		int iy1 = (iy + (ix-ix1)/nx) % ny;
-		int x1 = w * ix1 / nx;
-		int y1 = h * iy1 / ny;
-		int x2 = w * (ix1+1) / nx;
-		int y2 = h * (iy1+1) / ny;
-		SDL_Rect rect;
-		rect.x = x1;
-		rect.y = y1;
-		rect.w = x2 - x1;
-		rect.h = y2 - y1;
-		return rect;
-	}
-};
+sprite::sprite(SDL_Surface* surface_, SDL_Texture* texture_, int nx_, int ny_) :
+	surface(surface_), texture(texture_), nx(nx_), ny(ny_) {
+	w = surface->w;
+	h = surface->h;
+}
+
+SDL_Rect getSpriteRect(const sprite& sp, int ix=0, int iy=0) {
+	int ix1 = ix % sp.nx;
+	int iy1 = (iy + (ix-ix1)/sp.nx) % sp.ny;
+	int x1 = sp.w * ix1 / sp.nx;
+	int y1 = sp.h * iy1 / sp.ny;
+	int x2 = sp.w * (ix1+1) / sp.nx;
+	int y2 = sp.h * (iy1+1) / sp.ny;
+	SDL_Rect rect;
+	rect.x = x1;
+	rect.y = y1;
+	rect.w = x2 - x1;
+	rect.h = y2 - y1;
+	return rect;
+}
 
 sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& color, SDL_Renderer* const renderer, const std::string& text) {
 	typedef std::tuple< std::string, int, SDL_Color, SDL_Renderer*, std::string > input;
@@ -212,18 +210,18 @@ void window::clear() {
 	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
 }
 
-void window::_text(double x, double y, const std::string& font, int size, const std::string& text, double adjx, double adjy) {
-	SDL_Color color = {255,255,255,255};
-	sprite ren = cached_RenderedText(font, size, color, sdl_renderer, text);
-	SDL_Rect src_rect = ren.getRect();
+void window::stamp(double x, double y, const sprite& sp) {
+	SDL_Rect src_rect = getSpriteRect(sp);
 	SDL_Rect dst_rect = src_rect;
 	dst_rect.x = x - src_rect.w*adjx;
 	dst_rect.y = y - src_rect.h*adjy;
-	SDL_RenderCopy(sdl_renderer, ren.texture, &src_rect, &dst_rect);
+	SDL_RenderCopy(sdl_renderer, sp.texture, &src_rect, &dst_rect);
 }
 
-void window::text(double x, double y, int size, const std::string& text) {
-	return _text(x,y,"OpenSans-Medium.ttf", size, text);
+void window::text(double x, double y, const std::string& text) {
+	SDL_Color color = {255,255,255,255};
+	sprite sp = cached_RenderedText(font_name, font_size, color, sdl_renderer, text);
+	return stamp(x,y,sp);
 }
 
 double flow(double x) {
