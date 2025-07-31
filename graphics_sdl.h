@@ -10,13 +10,14 @@
 
 class SDL_Window;
 class SDL_Renderer;
-
+class TTF_Font;
 
 class window {
 private:
 	struct sdl_global {
 		bool kbd_tab[256];
 		window* active;
+		TTF_Font* Sans;
 		std::vector<window*> windows;
 	public:
 		sdl_global();

@@ -1,8 +1,40 @@
 #include "graphics_sdl.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include <list>
+#include <string>
+#include <tuple>
+#include <map>
+
+
+template <class A, class B>
+class priority_cache {
+	typedef std::pair<A,B> pair_t;
+	typedef std::list<pair_t> list_t;
+	typedef std::map<A, typename list_t::iterator> map_t;
+	list_t list;
+	map_t map;
+public:
+	B& get(const A& val) {
+		typename list_t::iterator lit;
+		typename map_t::iterator mit;
+		mit = map.find(val);
+		if (mit == map.end()) {
+			list.emplace_front(std::make_pair(val,val));
+		} else {
+			lit = mit->second;
+			if (lit != list.begin()) {
+				list.splice(list.begin(), list, lit, lit++);
+			}
+		}
+		lit = list.begin();
+		map[val] = lit;
+		return lit->second;
+	}
+};
 
 const double pi = 4*atan(1.0);
 const double twopi = 2*pi;
@@ -23,11 +55,80 @@ window::~window() {
     }
 };
 
+TTF_Font* cached_Font(const std::string& font, int size) {
+	typedef std::tuple< std::string, int > input;
+	struct output {
+		TTF_Font* font;
+		output(const input& in) {
+			//printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
+			font = TTF_OpenFont(std::get<0>(in).c_str(), std::get<1>(in));
+			if (font == NULL) {
+				fprintf(stderr, "Failed to load font: %s\n", SDL_GetError());
+			}
+		}
+		~output() {
+			printf("destroy font\n");
+			TTF_CloseFont(font);
+		}
+	};
+	static priority_cache<input, output> cache;
+	output out = cache.get(input(font,size));
+	return out.font;
+}
+
+bool operator<(const SDL_Color& A, const SDL_Color& B) {
+	if (A.r < B.r) return true;
+	if (A.r > B.r) return false;
+	if (A.g < B.g) return true;
+	if (A.g > B.g) return false;
+	if (A.b < B.b) return true;
+	if (A.b > B.b) return false;
+	if (A.a < B.a) return true;
+	return false;
+}
+
+SDL_Texture* cached_RenderedText(const std::string& font, int size, const SDL_Color& color, SDL_Renderer* const renderer, const std::string& text) {
+	typedef std::tuple< std::string, int, SDL_Color, SDL_Renderer*, std::string > input;
+	struct output {
+		SDL_Surface* textSurface;
+		SDL_Texture* textTexture;
+		output(const input& in) {
+			TTF_Font* font = cached_Font(std::get<0>(in), std::get<1>(in));
+			textSurface = TTF_RenderText_Blended(font, std::get<4>(in).c_str(), std::get<2>(in));
+			textTexture = SDL_CreateTextureFromSurface(std::get<3>(in), textSurface);
+		}
+		~output() {
+			printf("destroy rendered text\n");
+			SDL_FreeSurface(textSurface);
+			SDL_DestroyTexture(textTexture);
+		}
+	};
+	static priority_cache<input, output> cache;
+	output out = cache.get(input(font,size,color,renderer,text));
+	//return out.textTexture;
+	return NULL;
+}
+
 
 window::sdl_global::sdl_global() {
+	TTF_Init();
 	for (int i = 0; i < 256; i++) {
 		kbd_tab[i] = false;
 	}
+	Sans = cached_Font("OpenSans-Medium.ttf", 24);
+	if (Sans == NULL) {
+		fprintf(stderr, "Something went seriously wrong\n");
+	}
+// // this is the color in rgb format,
+// // maxing out all would give you the color white,
+// // and it will be your text's color
+	SDL_Color White = {255, 255, 255};
+
+// // as TTF_RenderText_Solid could only be used on
+// // SDL_Surface then you have to create the surface first
+	SDL_Surface* surfaceMessage =
+		TTF_RenderText_Solid(Sans, "put your text here", White); 
+
 }
 
 window::sdl_global::~sdl_global() {

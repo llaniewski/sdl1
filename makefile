@@ -1,6 +1,6 @@
 all: main
 
-LDLIBS+=-lSDL2
+LDLIBS+=-lSDL2 -lSDL2_ttf
 
 main: main.o graphics_sdl.o
 main.o: main.cpp graphics_sdl.h
