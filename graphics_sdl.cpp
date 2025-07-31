@@ -23,16 +23,22 @@ public:
 		typename map_t::iterator mit;
 		mit = map.find(val);
 		if (mit == map.end()) {
+			printf("not found, emplacing\n");
 			list.emplace_front(std::make_pair(val,val));
 		} else {
+			printf("found\n");
 			lit = mit->second;
 			if (lit != list.begin()) {
+				printf("splicing\n");
 				list.splice(list.begin(), list, lit, lit++);
 			}
 		}
 		lit = list.begin();
 		map[val] = lit;
 		return lit->second;
+	}
+	~priority_cache() {
+		printf("deleting priority_cache\n");
 	}
 };
 
@@ -60,7 +66,7 @@ TTF_Font* cached_Font(const std::string& font, int size) {
 	struct output {
 		TTF_Font* font;
 		output(const input& in) {
-			//printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
+			printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
 			font = TTF_OpenFont(std::get<0>(in).c_str(), std::get<1>(in));
 			if (font == NULL) {
 				fprintf(stderr, "Failed to load font: %s\n", SDL_GetError());
@@ -72,7 +78,7 @@ TTF_Font* cached_Font(const std::string& font, int size) {
 		}
 	};
 	static priority_cache<input, output> cache;
-	output out = cache.get(input(font,size));
+	output& out = cache.get(input(font,size));
 	return out.font;
 }
 
@@ -93,7 +99,9 @@ SDL_Texture* cached_RenderedText(const std::string& font, int size, const SDL_Co
 		SDL_Surface* textSurface;
 		SDL_Texture* textTexture;
 		output(const input& in) {
+			printf("Getting Font for rendering text: %s\n", std::get<4>(in).c_str());
 			TTF_Font* font = cached_Font(std::get<0>(in), std::get<1>(in));
+			printf("Rendering text: %s\n", std::get<4>(in).c_str());
 			textSurface = TTF_RenderText_Blended(font, std::get<4>(in).c_str(), std::get<2>(in));
 			textTexture = SDL_CreateTextureFromSurface(std::get<3>(in), textSurface);
 		}
@@ -104,7 +112,7 @@ SDL_Texture* cached_RenderedText(const std::string& font, int size, const SDL_Co
 		}
 	};
 	static priority_cache<input, output> cache;
-	output out = cache.get(input(font,size,color,renderer,text));
+	output& out = cache.get(input(font,size,color,renderer,text));
 	//return out.textTexture;
 	return NULL;
 }
@@ -115,19 +123,19 @@ window::sdl_global::sdl_global() {
 	for (int i = 0; i < 256; i++) {
 		kbd_tab[i] = false;
 	}
-	Sans = cached_Font("OpenSans-Medium.ttf", 24);
-	if (Sans == NULL) {
-		fprintf(stderr, "Something went seriously wrong\n");
-	}
-// // this is the color in rgb format,
-// // maxing out all would give you the color white,
-// // and it will be your text's color
-	SDL_Color White = {255, 255, 255};
+// 	Sans = cached_Font("OpenSans-Medium.ttf", 24);
+// 	if (Sans == NULL) {
+// 		fprintf(stderr, "Something went seriously wrong\n");
+// 	}
+// // // this is the color in rgb format,
+// // // maxing out all would give you the color white,
+// // // and it will be your text's color
+// 	SDL_Color White = {255, 255, 255};
 
-// // as TTF_RenderText_Solid could only be used on
-// // SDL_Surface then you have to create the surface first
-	SDL_Surface* surfaceMessage =
-		TTF_RenderText_Solid(Sans, "put your text here", White); 
+// // // as TTF_RenderText_Solid could only be used on
+// // // SDL_Surface then you have to create the surface first
+// 	SDL_Surface* surfaceMessage =
+// 		TTF_RenderText_Solid(Sans, "put your text here", White); 
 
 }
 
@@ -191,6 +199,21 @@ void window::clear() {
 	SDL_RenderClear(sdl_renderer);
 	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
 }
+
+
+
+
+void window::_text(double x, double y, const std::string& font, int size, const std::string& text) {
+	SDL_Color color = {255,255,255};
+	SDL_Texture* tex = cached_RenderedText(font, size, color, sdl_renderer, text);
+	SDL_Rect rect;
+	SDL_RenderCopy(sdl_renderer, tex, NULL, &rect);
+}
+
+void window::text(double x, double y, int size, const std::string& text) {
+	return _text(x,y,"OpenSans-Medium.ttf", size, text);
+}
+
 
 double flow(double x) {
 	if (x < 0) x = 0;

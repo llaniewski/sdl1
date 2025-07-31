@@ -15,6 +15,7 @@ int main() {
 	circle(200,200,50);
 	circle(200,200,100);
 	circle(200,200,150);
+	text(200,200,10,"Some text");
 	wait();
 	return 0;
 }

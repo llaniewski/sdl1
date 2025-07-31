@@ -7,6 +7,7 @@
 //
 
 #include <vector>
+#include <string>
 
 class SDL_Window;
 class SDL_Renderer;
@@ -17,7 +18,7 @@ private:
 	struct sdl_global {
 		bool kbd_tab[256];
 		window* active;
-		TTF_Font* Sans;
+		//TTF_Font* Sans;
 		std::vector<window*> windows;
 	public:
 		sdl_global();
@@ -39,6 +40,7 @@ private:
 	void _resetto();
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
+	void _text(double x, double y, const std::string& font, int size, const std::string& text);
 public:
 	window();
 	~window();
@@ -51,6 +53,7 @@ public:
 	void setcolor(unsigned int c);
 	void point(double x, double y);
 	void slow();
+	void text(double x, double y, int size, const std::string& text);
 };
 
 unsigned int rainbow(double c);
@@ -75,3 +78,4 @@ inline void setcolor(unsigned int c) { return active_window().setcolor(c); }
 inline void slow() { return active_window().slow(); }
 inline int animate(double fps) { return window::global.animate(fps); }
 inline void wait() { return window::global.wait(); }
+inline void text(double x, double y, int size, const std::string& text) { return active_window().text(x, y, size, text); };
