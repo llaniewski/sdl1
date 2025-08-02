@@ -55,7 +55,7 @@ window::window() {
 	sdl_renderer = NULL;
 	fg.r = 255; fg.g = 255; fg.b = 255; fg.a = 255;
 	bg.r =   0; bg.g =   0; bg.b =   0; bg.a = 255;
-	font_name = "OpenSans-Medium.ttf";
+	font_name = "assets/OpenSans-Medium.ttf";
 	font_size = 20;
 	adjx = 0.5;
 	adjy = 0.5;
