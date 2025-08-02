@@ -14,6 +14,11 @@ class SDL_Renderer;
 class SDL_Surface;
 class SDL_Texture;
 
+struct color_t {
+	unsigned char r,g,b,a;
+	inline color_t(unsigned char r_=0, unsigned char g_=0, unsigned char b_=0, unsigned char a_=255): r(r_),g(g_),b(b_),a(a_) {};
+};
+
 class sprite {
 public:
 	SDL_Surface* surface;
@@ -41,7 +46,7 @@ private:
 
 	SDL_Window* sdl_window;
 	SDL_Renderer* sdl_renderer;
-
+	
 	bool is_slow;
 	bool to_set;
 	double to_x, to_y;
@@ -49,9 +54,11 @@ private:
 	std::string font_name;
 	int font_size;
 	double adjx, adjy;
+	color_t fg, bg;
 	void _resetto();
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
+	void _setcolor(const color_t& c);
 public:
 	window();
 	~window();
@@ -60,8 +67,8 @@ public:
 	void clear();
 	void line(double x1, double y1, double x2, double y2);
 	void circle(double x0, double y0, int r);
-	void setcolor(int r, int g, int b);
-	void setcolor(unsigned int c);
+	void setcolor(int r, int g, int b, int a=255);
+	void setcolor(const color_t& c);
 	void point(double x, double y);
 	void slow();
 	void stamp(double x, double y, const sprite& sp);
@@ -71,11 +78,12 @@ public:
 	void set_adj(double adjx_, double adjy_) { adjx = adjx_; adjy = adjy_; };
 };
 
-unsigned int rainbow(double c);
-unsigned int setgray(double c);
+color_t rainbow(double c);
+color_t setgray(double c);
 
-const unsigned int GREEN = 0x00FF00;
-const unsigned int WHITE = 0xFFFFFF;
+const color_t GREEN = {0,255,0};
+const color_t WHITE = {255,255,255};
+const color_t BLACK = {0,0,0};
 const char SPACEBAR = 32;
 
 inline window& active_window() { return *window::global.active; }
@@ -88,8 +96,8 @@ inline void clear() { return active_window().clear(); }
 inline void line(double x1, double y1, double x2, double y2) { return active_window().line(x1, y1, x2, y2); }
 inline void circle(double x, double y, int r) { return active_window().circle(x, y, r); }
 inline void point(double x, double y) { return active_window().point(x, y); }
-inline void setcolor(int r, int g, int b) {return active_window().setcolor(r, g, b); }
-inline void setcolor(unsigned int c) { return active_window().setcolor(c); }
+inline void setcolor(int r, int g, int b, int a=255) {return active_window().setcolor(r, g, b, a); }
+inline void setcolor(color_t c) { return active_window().setcolor(c); }
 inline void slow() { return active_window().slow(); }
 inline int animate(double fps) { return window::global.animate(fps); }
 inline void wait() { return window::global.wait(); }

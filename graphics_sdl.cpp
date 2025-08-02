@@ -53,6 +53,8 @@ window::window() {
 	is_slow = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
+	fg.r = 255; fg.g = 255; fg.b = 255; fg.a = 255;
+	bg.r =   0; bg.g =   0; bg.b =   0; bg.a = 255;
 	font_name = "OpenSans-Medium.ttf";
 	font_size = 20;
 	adjx = 0.5;
@@ -157,10 +159,10 @@ window::sdl_global::~sdl_global() {
 void window::init(int sx, int sy) {
     sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
-	SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 	initialised = true;
 	global.windows.push_back(this);
 	global.active = this;
+	SDL_SetRenderDrawColor(sdl_renderer, fg.r, fg.g, fg.b, fg.a);
 }
 
 int window::sdl_global::animate(double fps) {
@@ -202,12 +204,10 @@ int window::sdl_global::animate(double fps) {
 	return ret;
 }
 
-void window::clear() {
-	Uint8 r,g,b,a;
-	SDL_GetRenderDrawColor(sdl_renderer, &r, &g, &b, &a);
-	SDL_SetRenderDrawColor(sdl_renderer, 128, 0, 0, 255);
+void window::clear() {	
+	_setcolor(bg);
 	SDL_RenderClear(sdl_renderer);
-	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
+	_setcolor(fg);
 }
 
 void window::stamp(double x, double y, const sprite& sp) {
@@ -219,7 +219,7 @@ void window::stamp(double x, double y, const sprite& sp) {
 }
 
 void window::text(double x, double y, const std::string& text) {
-	SDL_Color color = {255,255,255,255};
+	SDL_Color color = {fg.r, fg.g, fg.b, fg.a};
 	sprite sp = cached_RenderedText(font_name, font_size, color, sdl_renderer, text);
 	return stamp(x,y,sp);
 }
@@ -301,21 +301,25 @@ void window::sdl_global::wait() {
 	while (animate(15)) {};
 }
 
-
-
-void window::setcolor(int r, int g, int b)
+void window::_setcolor(const color_t& col)
 {
-	SDL_SetRenderDrawColor(sdl_renderer, r, g, b, 255);
+	SDL_SetRenderDrawColor(sdl_renderer, col.r, col.g, col.b, col.a);
 }
 
-void window::setcolor(unsigned int col)
+
+void window::setcolor(int r, int g, int b, int a)
 {
-	int b = col & 0xFF;
-	col = col >> 8;
-	int g = col & 0xFF;
-	col = col >> 8;
-	int r = col & 0xFF;
-	setcolor(r, g, b);
+	fg.r = r;
+	fg.g = g;
+	fg.b = b;
+	fg.a = a;
+	_setcolor(fg);
+}
+
+void window::setcolor(const color_t& col)
+{
+	fg = col;
+	_setcolor(fg);
 }
 
 
@@ -323,7 +327,7 @@ void window::point(double x, double y) {
 	SDL_RenderDrawPoint(sdl_renderer, x,y);
 }
 
-unsigned int floatcolor(double rd, double gd, double bd)
+color_t floatcolor(double rd, double gd, double bd)
 {
 	double dcol[3];
 	dcol[0] = rd; dcol[1] = gd; dcol[2] = bd;
@@ -339,7 +343,7 @@ unsigned int floatcolor(double rd, double gd, double bd)
 	return col;
 }
 
-unsigned int rainbow(double c)
+color_t rainbow(double c)
 {
 	c *= 4;
 	if (c < 0) c = 0;
@@ -353,7 +357,7 @@ unsigned int rainbow(double c)
 	return floatcolor(0, cos(c * pi / 2), 1);
 }
 
-unsigned int setgray(double c)
+color_t setgray(double c)
 {
 	if (c < 0) c = 0;
 	if (c > 1) c = 1;
