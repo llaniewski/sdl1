@@ -62,9 +62,7 @@ window::window() {
 }
 
 window::~window() {
-    if (initialised) {
-        SDL_Quit();
-    }
+
 };
 
 TTF_Font* cached_Font(const std::string& font, int size) {
@@ -152,7 +150,7 @@ window::sdl_global::sdl_global() {
 }
 
 window::sdl_global::~sdl_global() {
-
+	SDL_Quit();
 }
 
 
@@ -327,19 +325,22 @@ void window::point(double x, double y) {
 	SDL_RenderDrawPoint(sdl_renderer, x,y);
 }
 
-color_t floatcolor(double rd, double gd, double bd)
+unsigned char _floatcolor(double d) {
+	d = d*255;
+	int c = d;
+	if (rand() <= (d - c) * RAND_MAX) c += 1;
+	if (c > 255) c = 255;
+	if (c < 0) c = 0;
+	return c;
+}
+
+color_t floatcolor(double r, double g, double b, double a=1)
 {
-	double dcol[3];
-	dcol[0] = rd; dcol[1] = gd; dcol[2] = bd;
-	int col = 0;
-	for (int i = 0; i < 3; i++) {
-		double d = dcol[i]*255;
-		int c = d;
-		if (rand() <= (d - c) * RAND_MAX) c += 1;
-		if (c > 255) c = 255;
-		if (c < 0) c = 0;
-		col = (col << 8) + c;
-	}
+	color_t col;
+	col.r = _floatcolor(r);
+	col.g = _floatcolor(g);
+	col.b = _floatcolor(b);
+	col.a = _floatcolor(a);
 	return col;
 }
 

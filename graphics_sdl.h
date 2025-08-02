@@ -16,7 +16,8 @@ class SDL_Texture;
 
 struct color_t {
 	unsigned char r,g,b,a;
-	inline color_t(unsigned char r_=0, unsigned char g_=0, unsigned char b_=0, unsigned char a_=255): r(r_),g(g_),b(b_),a(a_) {};
+	inline color_t(): r(0),g(0),b(0),a(255) {};
+	inline color_t(unsigned char r_, unsigned char g_, unsigned char b_, unsigned char a_=255): r(r_),g(g_),b(b_),a(a_) {};
 };
 
 class sprite {
