@@ -9,7 +9,7 @@
 int main() {
 	graphics(400,400);
 	slow();
-	clear();
+	//clear();
 	line(50,50,350,350);
 	line(50,350,350,50);
 	circle(200,200,50);
