@@ -160,7 +160,9 @@ void window::init(int sx, int sy) {
 	initialised = true;
 	global.windows.push_back(this);
 	global.active = this;
-	SDL_SetRenderDrawColor(sdl_renderer, fg.r, fg.g, fg.b, fg.a);
+	_setcolor(bg);
+	SDL_RenderClear(sdl_renderer);
+	_setcolor(fg);
 }
 
 int window::sdl_global::animate(double fps) {
