@@ -24,29 +24,28 @@ class priority_cache {
 	typedef std::map<A, typename list_t::iterator> map_t;
 	list_t list;
 	map_t map;
+	const size_t max_size = 20;
 public:
 	B& get(const A& val) {
 		typename list_t::iterator lit;
 		typename map_t::iterator mit;
 		mit = map.find(val);
 		if (mit == map.end()) {
-			printf("not found, emplacing\n");
+			if (list.size() >= max_size) {
+				A& idx = list.back().first;
+				map.erase(idx);
+				list.pop_back();
+			}
 			list.emplace_front(std::make_pair(val,val));
 		} else {
-			printf("found\n");
 			lit = mit->second;
-			if (lit != list.begin()) {
-				printf("splicing\n");
-				list.splice(list.begin(), list, lit, lit++);
-			}
+			if (lit != list.begin()) list.splice(list.begin(), list, lit, std::next(lit));
 		}
 		lit = list.begin();
 		map[val] = lit;
 		return lit->second;
 	}
-	~priority_cache() {
-		printf("deleting priority_cache\n");
-	}
+	~priority_cache() {	}
 };
 
 const double pi = 4*atan(1.0);
@@ -77,14 +76,13 @@ TTF_Font* cached_Font(const std::string& font, int size) {
 	struct output {
 		TTF_Font* font;
 		output(const input& in) {
-			printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
+			//printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
 			font = TTF_OpenFont(std::get<0>(in).c_str(), std::get<1>(in));
 			if (font == NULL) {
 				fprintf(stderr, "Failed to load font: %s\n", SDL_GetError());
 			}
 		}
 		~output() {
-			printf("destroy font\n");
 			TTF_CloseFont(font);
 		}
 	};
@@ -126,26 +124,24 @@ SDL_Rect getSpriteRect(const sprite& sp, int ix=0, int iy=0) {
 }
 
 sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& color, SDL_Renderer* const renderer, const std::string& text) {
-	typedef std::tuple< std::string, int, SDL_Color, SDL_Renderer*, std::string > input;
+	typedef std::tuple< std::string, std::string, int, SDL_Color, SDL_Renderer* > input;
 	struct output {
 		SDL_Surface* textSurface;
 		SDL_Texture* textTexture;
 		output() : textSurface(NULL), textTexture(NULL) {};
 		output(const input& in) {
-			printf("Getting Font for rendering text: %s\n", std::get<4>(in).c_str());
-			TTF_Font* font = cached_Font(std::get<0>(in), std::get<1>(in));
-			printf("Rendering text: %s\n", std::get<4>(in).c_str());
-			textSurface = TTF_RenderText_Blended(font, std::get<4>(in).c_str(), std::get<2>(in));
-			textTexture = SDL_CreateTextureFromSurface(std::get<3>(in), textSurface);
+			// printf("Rendering text: %s\n", std::get<0>(in).c_str());
+			TTF_Font* font = cached_Font(std::get<1>(in), std::get<2>(in));
+			textSurface = TTF_RenderText_Blended(font, std::get<0>(in).c_str(), std::get<3>(in));
+			textTexture = SDL_CreateTextureFromSurface(std::get<4>(in), textSurface);
 		}
 		~output() {
-			printf("destroy rendered text\n");
 			SDL_DestroyTexture(textTexture);
 			SDL_FreeSurface(textSurface);
 		}
 	};
 	static priority_cache<input, output> cache;
-	output& out = cache.get(input(font,size,color,renderer,text));
+	output& out = cache.get(input(text,font,size,color,renderer));
 	return sprite(out.textSurface, out.textTexture);
 }
 
@@ -156,7 +152,7 @@ sprite cached_Image(const std::string& image, SDL_Renderer* const renderer, int 
 		SDL_Texture* imageTexture;
 		output() : imageSurface(NULL), imageTexture(NULL) {};
 		output(const input& in) {
-			printf("Loading image: %s\n", std::get<0>(in).c_str());
+			// printf("Loading image: %s\n", std::get<0>(in).c_str());
 			imageSurface = IMG_Load( std::get<0>(in).c_str() );
 			if (imageSurface == NULL) {
 				fprintf(stderr, "Failed to load image: %s\n", SDL_GetError());
@@ -166,7 +162,6 @@ sprite cached_Image(const std::string& image, SDL_Renderer* const renderer, int 
 			imageTexture = SDL_CreateTextureFromSurface(std::get<1>(in), imageSurface);
 		}
 		~output() {
-			printf("destroy image\n");
 			SDL_DestroyTexture(imageTexture);
 			SDL_FreeSurface(imageSurface);
 		}
