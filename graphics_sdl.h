@@ -72,11 +72,12 @@ public:
 	void setcolor(const color_t& c);
 	void point(double x, double y);
 	void slow();
-	void stamp(double x, double y, const sprite& sp);
+	void stamp(double x, double y, const sprite& sp, int ix=0, int iy=0);
 	void text(double x, double y, const std::string& text);
 	inline void set_font(const std::string& font_name_) { font_name = font_name_; };
 	inline void set_font_size(int font_size_) { font_size = font_size_; };
 	void set_adj(double adjx_, double adjy_) { adjx = adjx_; adjy = adjy_; };
+	sprite load_image(const std::string& image, int nx=1, int ny=1);
 };
 
 color_t rainbow(double c);
@@ -103,3 +104,5 @@ inline void slow() { return active_window().slow(); }
 inline int animate(double fps) { return window::global.animate(fps); }
 inline void wait() { return window::global.wait(); }
 inline void text(double x, double y, const std::string& text) { return active_window().text(x, y, text); };
+inline sprite load_image(const std::string& image, int nx=1, int ny=1) { return active_window().load_image(image, nx, ny); };
+inline void stamp(double x, double y, const sprite& sp, int ix=0, int iy=0) { return active_window().stamp(x, y, sp, ix, iy); }

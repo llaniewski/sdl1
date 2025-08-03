@@ -1,6 +1,7 @@
 #include "graphics_sdl.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -9,6 +10,12 @@
 #include <tuple>
 #include <map>
 
+
+    // //The final optimized image
+    // SDL_Surface* optimizedSurface = NULL;
+
+    // //Load image at specified path
+    // SDL_Surface* loadedSurface = IMG_Load( path.c_str() );
 
 template <class A, class B>
 class priority_cache {
@@ -123,6 +130,7 @@ sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& c
 	struct output {
 		SDL_Surface* textSurface;
 		SDL_Texture* textTexture;
+		output() : textSurface(NULL), textTexture(NULL) {};
 		output(const input& in) {
 			printf("Getting Font for rendering text: %s\n", std::get<4>(in).c_str());
 			TTF_Font* font = cached_Font(std::get<0>(in), std::get<1>(in));
@@ -132,8 +140,8 @@ sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& c
 		}
 		~output() {
 			printf("destroy rendered text\n");
-			SDL_FreeSurface(textSurface);
 			SDL_DestroyTexture(textTexture);
+			SDL_FreeSurface(textSurface);
 		}
 	};
 	static priority_cache<input, output> cache;
@@ -141,9 +149,38 @@ sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& c
 	return sprite(out.textSurface, out.textTexture);
 }
 
+sprite cached_Image(const std::string& image, SDL_Renderer* const renderer, int nx, int ny) {
+	typedef std::tuple< std::string, SDL_Renderer* > input;
+	struct output {
+		SDL_Surface* imageSurface;
+		SDL_Texture* imageTexture;
+		output() : imageSurface(NULL), imageTexture(NULL) {};
+		output(const input& in) {
+			printf("Loading image: %s\n", std::get<0>(in).c_str());
+			imageSurface = IMG_Load( std::get<0>(in).c_str() );
+			if (imageSurface == NULL) {
+				fprintf(stderr, "Failed to load image: %s\n", SDL_GetError());
+				exit(-1);
+			}
+			printf("Loaded: %s: %dx%d\n", std::get<0>(in).c_str(), (int) imageSurface->w, (int) imageSurface->h );
+			imageTexture = SDL_CreateTextureFromSurface(std::get<1>(in), imageSurface);
+		}
+		~output() {
+			printf("destroy image\n");
+			SDL_DestroyTexture(imageTexture);
+			SDL_FreeSurface(imageSurface);
+		}
+	};
+	static priority_cache<input, output> cache;
+	output& out = cache.get(input(image,renderer));
+	printf("loaded: %p %p %d %d\n",out.imageSurface, out.imageTexture, nx, ny);
+	return sprite(out.imageSurface, out.imageTexture, nx, ny);
+}
+
 
 window::sdl_global::sdl_global() {
 	TTF_Init();
+	IMG_Init( IMG_INIT_PNG );
 	for (int i = 0; i < 256; i++) {
 		kbd_tab[i] = false;
 	}
@@ -210,8 +247,13 @@ void window::clear() {
 	_setcolor(fg);
 }
 
-void window::stamp(double x, double y, const sprite& sp) {
-	SDL_Rect src_rect = getSpriteRect(sp);
+sprite window::load_image(const std::string& image, int nx, int ny) {
+	sprite sp = cached_Image(image, sdl_renderer, nx, ny);
+	return sp;
+}
+
+void window::stamp(double x, double y, const sprite& sp, int ix, int iy) {
+	SDL_Rect src_rect = getSpriteRect(sp,ix,iy);
 	SDL_Rect dst_rect = src_rect;
 	dst_rect.x = x - src_rect.w*adjx;
 	dst_rect.y = y - src_rect.h*adjy;
