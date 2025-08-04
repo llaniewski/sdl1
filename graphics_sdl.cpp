@@ -1,4 +1,5 @@
 #include "graphics_sdl.h"
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
@@ -53,14 +54,21 @@ const double twopi = 2*pi;
 
 window::sdl_global window::global;
 
+void check_pointer(void* ptr) {
+	if (ptr == NULL) {
+		fprintf(stderr, "Fatal error: %s\n", SDL_GetError());
+		exit(5);
+	}
+}
+
 window::window() {
     initialised = false;
 	to_set = false;
 	is_slow = false;
 	sdl_window = NULL;
 	sdl_renderer = NULL;
-	fg.r = 255; fg.g = 255; fg.b = 255; fg.a = 255;
-	bg.r =   0; bg.g =   0; bg.b =   0; bg.a = 255;
+	fg.r = 255; fg.g = 255; fg.b = 255; fg.a = SDL_ALPHA_OPAQUE;
+	bg.r =   0; bg.g =   0; bg.b =   0; bg.a = SDL_ALPHA_OPAQUE;
 	font_name = "assets/OpenSans-Medium.ttf";
 	font_size = 20;
 	adjx = 0.5;
@@ -78,9 +86,7 @@ TTF_Font* cached_Font(const std::string& font, int size) {
 		output(const input& in) {
 			//printf("Loading font: %s (%d)\n", std::get<0>(in).c_str(), std::get<1>(in));
 			font = TTF_OpenFont(std::get<0>(in).c_str(), std::get<1>(in));
-			if (font == NULL) {
-				fprintf(stderr, "Failed to load font: %s\n", SDL_GetError());
-			}
+			check_pointer(font);
 		}
 		~output() {
 			TTF_CloseFont(font);
@@ -133,7 +139,9 @@ sprite cached_RenderedText(const std::string& font, int size, const SDL_Color& c
 			// printf("Rendering text: %s\n", std::get<0>(in).c_str());
 			TTF_Font* font = cached_Font(std::get<1>(in), std::get<2>(in));
 			textSurface = TTF_RenderText_Blended(font, std::get<0>(in).c_str(), std::get<3>(in));
+			check_pointer(textSurface);
 			textTexture = SDL_CreateTextureFromSurface(std::get<4>(in), textSurface);
+			check_pointer(textTexture);
 		}
 		~output() {
 			SDL_DestroyTexture(textTexture);
@@ -154,12 +162,10 @@ sprite cached_Image(const std::string& image, SDL_Renderer* const renderer, int 
 		output(const input& in) {
 			// printf("Loading image: %s\n", std::get<0>(in).c_str());
 			imageSurface = IMG_Load( std::get<0>(in).c_str() );
-			if (imageSurface == NULL) {
-				fprintf(stderr, "Failed to load image: %s\n", SDL_GetError());
-				exit(-1);
-			}
-			printf("Loaded: %s: %dx%d\n", std::get<0>(in).c_str(), (int) imageSurface->w, (int) imageSurface->h );
+			check_pointer(imageSurface);
+			//printf("Loaded: %s: %dx%d\n", std::get<0>(in).c_str(), (int) imageSurface->w, (int) imageSurface->h );
 			imageTexture = SDL_CreateTextureFromSurface(std::get<1>(in), imageSurface);
+			check_pointer(imageTexture);
 		}
 		~output() {
 			SDL_DestroyTexture(imageTexture);
@@ -174,6 +180,7 @@ sprite cached_Image(const std::string& image, SDL_Renderer* const renderer, int 
 
 
 window::sdl_global::sdl_global() {
+	SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER );
 	TTF_Init();
 	IMG_Init( IMG_INIT_PNG );
 	for (int i = 0; i < 256; i++) {
@@ -188,13 +195,16 @@ window::sdl_global::~sdl_global() {
 
 void window::init(int sx, int sy) {
     sdl_window = SDL_CreateWindow("Graphical Window", 10, 10, sx, sy, false);
+	check_pointer(sdl_window);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
+	check_pointer(sdl_renderer);
 	initialised = true;
 	global.windows.push_back(this);
 	global.active = this;
 	_setcolor(bg);
 	SDL_RenderClear(sdl_renderer);
 	_setcolor(fg);
+	SDL_RenderPresent( sdl_renderer );
 }
 
 int window::sdl_global::animate(double fps) {
