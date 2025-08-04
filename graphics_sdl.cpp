@@ -291,7 +291,7 @@ void window::_lineto(double x, double y) {
 void window::line(double x1, double y1, double x2, double y2) {
 	if (is_slow) {
 		double d = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-		double m = 80.0/d;
+		double m = 60.0/d;
 		double t = 0;
 		_resetto();
 		for (double t = 0; t < 1; t += m) {
@@ -308,17 +308,18 @@ void window::line(double x1, double y1, double x2, double y2) {
 
 void window::circle(double x0, double y0, int r) {
 	double d = twopi*r;
-	double mi = 80.0/d;
+	double mi = 0.1;
 	double t2 = 0;
 	_resetto();
 	if (is_slow) {
-		double m = 80.0/d;
+		double m = 60.0/d;
 		for (double t = 0; t < 1; t += m) {
 			double t1 = twopi * flow(t);
-			while (t2 <= t1) {
+			while (t2 < t1) {
 				_lineto(x0+cos(t2)*r,y0+sin(t2)*r);
 				t2 += mi;
 			}
+			_lineto(x0+cos(t1)*r,y0+sin(t1)*r);
 			animate(15);
 		}
 	}
