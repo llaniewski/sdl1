@@ -11,13 +11,6 @@
 #include <tuple>
 #include <map>
 
-
-    // //The final optimized image
-    // SDL_Surface* optimizedSurface = NULL;
-
-    // //Load image at specified path
-    // SDL_Surface* loadedSurface = IMG_Load( path.c_str() );
-
 template <class A, class B>
 class priority_cache {
 	typedef std::pair<A,B> pair_t;
