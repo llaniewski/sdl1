@@ -396,8 +396,8 @@ color_t rainbow(double c)
 
 color_t grayscale(double c)
 {
-	if (c < 0) c = 0;
-	if (c > 1) c = 1;
-	return floatcolor(c, c, c);
+	if (c < 0) { return floatcolor(0, 0, 0); }
+	if (c < 1) { return floatcolor(c, c, c); }
+	return floatcolor(1, 1, 1);
 }
 
