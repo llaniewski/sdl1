@@ -385,19 +385,15 @@ color_t floatcolor(double r, double g, double b, double a=1)
 
 color_t rainbow(double c)
 {
-	c *= 4;
-	if (c < 0) c = 0;
-	if (c < 1) { return floatcolor( 1, sin(c * pi / 2), 0 ); }
-	c -= 1;
-	if (c < 1) { return floatcolor(cos(c * pi / 2), 1, 0); }
-	c -= 1;
-	if (c < 1) { return floatcolor(0, 1, sin(c * pi / 2)); }
-	c -= 1;
-	if (c > 1) c = 1;
-	return floatcolor(0, cos(c * pi / 2), 1);
+	if (c < 0.00) { return floatcolor( 1, 0, 0 ); }
+	if (c < 0.25) { return floatcolor( 1, sin(twopi * c), 0 ); }
+	if (c < 0.50) { return floatcolor(sin(twopi * c), 1, 0); }
+	if (c < 0.75) { return floatcolor(0, 1, -sin(twopi * c)); }
+	if (c < 1.00) { return floatcolor(0, -sin(twopi * c), 1); }
+	return floatcolor(0, 0, 1);
 }
 
-color_t setgray(double c)
+color_t grayscale(double c)
 {
 	if (c < 0) c = 0;
 	if (c > 1) c = 1;

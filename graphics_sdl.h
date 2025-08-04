@@ -81,7 +81,7 @@ public:
 };
 
 color_t rainbow(double c);
-color_t setgray(double c);
+color_t grayscale(double c);
 
 const color_t GREEN = {0,255,0};
 const color_t WHITE = {255,255,255};
