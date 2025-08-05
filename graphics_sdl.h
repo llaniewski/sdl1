@@ -47,6 +47,7 @@ private:
 
 	SDL_Window* sdl_window;
 	SDL_Renderer* sdl_renderer;
+	SDL_Texture* sdl_display;
 	
 	bool is_slow;
 	bool to_set;
@@ -60,6 +61,8 @@ private:
 	void _lineto(double x, double y);
 	void _line(double x1, double y1, double x2, double y2);
 	void _setcolor(const color_t& c);
+	void _update();
+	void _clear();
 public:
 	window();
 	~window();

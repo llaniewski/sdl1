@@ -194,15 +194,31 @@ void window::init(int sx, int sy) {
 	initialised = true;
 	global.windows.push_back(this);
 	global.active = this;
+	_setcolor(fg);	
+	sdl_display = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, sx, sy);
+	check_pointer(sdl_display);
+	SDL_SetRenderTarget(sdl_renderer, sdl_display);
+	_clear();
+	_update();
+}
+
+void window::_clear() {
 	_setcolor(bg);
 	SDL_RenderClear(sdl_renderer);
 	_setcolor(fg);
+}
+
+void window::_update() {
+	SDL_SetRenderTarget(sdl_renderer, NULL);
+	_clear();
+	SDL_RenderCopy(sdl_renderer, sdl_display, NULL, NULL);
 	SDL_RenderPresent( sdl_renderer );
+	SDL_SetRenderTarget(sdl_renderer, sdl_display);
 }
 
 int window::sdl_global::animate(double fps) {
 	for( window* w : global.windows) {
-		SDL_RenderPresent( w->sdl_renderer );
+		w->_update();
 	}
 	const double ticks_per_second = 1000.;
 	double targettime = ticks_per_second/fabs(fps);
@@ -240,9 +256,7 @@ int window::sdl_global::animate(double fps) {
 }
 
 void window::clear() {	
-	_setcolor(bg);
-	SDL_RenderClear(sdl_renderer);
-	_setcolor(fg);
+	_clear();
 }
 
 sprite window::load_image(const std::string& image, int nx, int ny) {
