@@ -15,13 +15,3 @@ int main() {
 	wait();
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
