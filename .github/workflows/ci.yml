@@ -20,7 +20,7 @@ jobs:
         run: |
           $env:VCPKG_ROOT="$PWD\vcpkg"
           $env:VCPKG_TARGET_TRIPLET = "x64-windows"
-          msbuild.exe /p:Configuration=Release /p:Platform=x64 /p:VcpkgRoot="%VCPKG_ROOT%" /p:VcpkgTriplet="%VCPKG_TARGET_TRIPLET%" .
+          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe" sdl2.vcxproj /p:Configuration=Release /p:Platform=x64
 
   build-linux:
     name: Build on Linux (make)
