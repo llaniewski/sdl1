@@ -14,6 +14,8 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git vcpkg
           .\vcpkg\bootstrap-vcpkg.bat
           .\vcpkg\vcpkg install sdl2:x64-windows
+          .\vcpkg\vcpkg install sdl2-ttf:x64-windows
+          .\vcpkg\vcpkg install sdl2-image:x64-windows
           $env:VCPKG_ROOT="$PWD\vcpkg"
 
       - name: Build with MSBuild
@@ -32,6 +34,8 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git vcpkg
           .\vcpkg\bootstrap-vcpkg.bat
           .\vcpkg\vcpkg install sdl2:x64-windows
+          .\vcpkg\vcpkg install sdl2-ttf:x64-windows
+          .\vcpkg\vcpkg install sdl2-image:x64-windows
           echo "VCPKG_ROOT=$PWD\vcpkg" >> $env:GITHUB_ENV
 
       - name: Build with CMake
