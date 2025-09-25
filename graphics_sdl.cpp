@@ -243,6 +243,10 @@ int window::sdl_global::animate(double fps) {
             exit(0);
 			ret = 0;
 		}
+		if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) {
+            exit(0);
+			ret = 0;
+		}
 		if (event.type == SDL_KEYDOWN) {
 			int key = event.key.keysym.sym;
 			is_pressed(key) = true;
