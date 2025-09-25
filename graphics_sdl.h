@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <list>
 
 class SDL_Window;
 class SDL_Renderer;
@@ -94,7 +95,9 @@ const char SPACEBAR = 32;
 inline window& active_window() { return *window::global.active; }
 inline int is_pressed(char ch) { return window::global.is_pressed(ch); }
 inline void graphics(int sx, int sy) {
-	window* win = new window;
+	static std::list<window> graphics_windows;
+	std::list<window>::iterator it = graphics_windows.emplace(graphics_windows.begin());
+	window* win = &(*it);
 	win->init(sx,sy);
 }
 inline void clear() { return active_window().clear(); }

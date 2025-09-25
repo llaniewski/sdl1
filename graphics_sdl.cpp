@@ -69,7 +69,7 @@ window::window() {
 }
 
 window::~window() {
-
+	
 };
 
 TTF_Font* cached_Font(const std::string& font, int size) {
